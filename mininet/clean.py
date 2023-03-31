@@ -102,12 +102,17 @@ class Cleanup( object ):
         links = sh( "ip link show | "
                     "egrep -o '([-_.[:alnum:]]+-eth[[:digit:]]+)'"
                     ).splitlines()
+        
         # Delete blocks of links
         n = 1000  # chunk size
         for i in range( 0, len( links ), n ):
             cmd = ';'.join( 'ip link del %s' % link
                              for link in links[ i : i + n ] )
             sh( '( %s ) 2> /dev/null' % cmd )
+    
+        # Destroy all Qos and Queue:
+        info("*** Destroy all Qos and Queue\n")
+        sh( 'ovs-vsctl -- --all destroy QoS -- --all destroy Queue' )
 
         if 'tap9' in sh( 'ip link show' ):
             info( "*** Removing tap9 - assuming it's from cluster edition\n" )
